@@ -4,13 +4,52 @@ Católica de Santa Catarina · Análise Preditiva · Prof. M. Sc. Rodrigo Hagstr
 
 **Integrantes:** Matheus Sady · Rafael Venturi · Rafael de Lara
 
-**Entregáveis:** relatório técnico em [`reports/relatorio_n3.pdf`](reports/relatorio_n3.pdf) · evidências dos ciclos em
-[`evidencias/ciclos/`](evidencias/ciclos) · capturas de tela em [`evidencias/prints/`](evidencias/prints) · histórico do
-MLflow em `state/mlflow.db` (abrir com `python scripts/abrir_mlflow.py`).
-
 Pipeline MLOps único e agendado que, a cada ciclo, incorpora um novo lote de dados, elege features por votação entre
 três métodos, coloca dois algoritmos para competir, registra tudo no MLflow e decide automaticamente se o modelo
 vigente deve ser substituído.
+
+## Guia para avaliação
+
+### Entregáveis (seção 7 do enunciado)
+
+| Item | Onde está |
+|---|---|
+| Relatório técnico em PDF | [`reports/relatorio_n3.pdf`](reports/relatorio_n3.pdf) |
+| Notebooks, código, configuração e workflow | [`notebooks/`](notebooks), [`src/`](src), [`config/config.yaml`](config/config.yaml), [`.github/workflows/pipeline_mlops.yml`](.github/workflows/pipeline_mlops.yml) |
+| Evidências de execução | [`evidencias/ciclos/`](evidencias/ciclos) (notebooks executados e saídas de cada ciclo), [`evidencias/prints/`](evidencias/prints) (capturas de tela), aba [Actions](https://github.com/Bornety0/projeto-n3-mlops/actions) |
+| Evidências do agendamento | [`evidencias/agendamento/`](evidencias/agendamento) — ver aviso abaixo |
+| Histórico do MLflow | `state/mlflow.db` + `state/mlartifacts/` (abrir com `python scripts/abrir_mlflow.py`) |
+| Modelo vigente e anteriores | [`models/modelo_vigente.json`](models/modelo_vigente.json), [`models/historico/`](models/historico) |
+| Instruções de reprodução | este README, seção [Como executar](#como-executar) |
+
+### Resultado dos ciclos
+
+Sete ciclos executados no GitHub Actions em 23/11/2026, todos com sucesso e sem intervenção depois do primeiro disparo.
+ROC-AUC na validação do ciclo; o vigente anterior é reavaliado na mesma validação; o teste reservado só é relatado.
+
+| Ciclo | Origem | Lote novo | Modelo A (LogReg) | Modelo B (HistGB) | Vigente anterior | Decisão | Teste do vigente | Drift | Execução |
+|---|---|---|---|---|---|---|---|---|---|
+| [1](evidencias/ciclos/c20261123T181606Z-gh45236387855) | `inicio` | lote_001 | 0,6658 | 0,6479 | – | promoveu (Regressão Logística) | 0,7164 | – | [run](https://github.com/Bornety0/projeto-n3-mlops/actions/runs/45236387855) |
+| [2](evidencias/ciclos/c20261123T182253Z-gh45237612466) | `encadeado` | lote_002 | 0,7008 | 0,7073 | 0,6947 | promoveu (HistGradientBoosting) | 0,6440 | alerta | [run](https://github.com/Bornety0/projeto-n3-mlops/actions/runs/45237612466) |
+| [3](evidencias/ciclos/c20261123T182934Z-gh45238828713) | `encadeado` | lote_003 | 0,6839 | 0,6887 | 0,6890 | manteve o vigente | 0,6440 | alerta | [run](https://github.com/Bornety0/projeto-n3-mlops/actions/runs/45238828713) |
+| [4](evidencias/ciclos/c20261123T183614Z-gh45240022843) | `encadeado` | lote_004 | 0,7364 | 0,7401 | 0,6550 | promoveu (HistGradientBoosting) | 0,8110 | alerta | [run](https://github.com/Bornety0/projeto-n3-mlops/actions/runs/45240022843) |
+| [5](evidencias/ciclos/c20261123T184307Z-gh45241187784) | `encadeado` | lote_005 | 0,7990 | 0,8064 | 0,7971 | manteve o vigente | 0,8110 | alerta | [run](https://github.com/Bornety0/projeto-n3-mlops/actions/runs/45241187784) |
+| [6](evidencias/ciclos/c20261123T185002Z-gh45242395959) | `encadeado` | nenhum | 0,7990 | 0,8064 | 0,7971 | manteve o vigente | 0,8110 | – | [run](https://github.com/Bornety0/projeto-n3-mlops/actions/runs/45242395959) |
+| [7](evidencias/ciclos/c20261123T185659Z-gh45243588298) | `encadeado` | nenhum | 0,7990 | 0,8064 | 0,7971 | manteve o vigente | 0,8110 | – | [run](https://github.com/Bornety0/projeto-n3-mlops/actions/runs/45243588298) |
+
+**Modelo vigente final:** HistGradientBoosting promovido no ciclo 4 — no teste reservado, ROC-AUC 0,811, recall 69% e
+precisão 33% para a classe positiva (taxa base de 11,3%). As 4 [issues](https://github.com/Bornety0/projeto-n3-mlops/issues)
+"Alerta de drift" foram abertas automaticamente pelos ciclos 2 a 5.
+
+### Aviso sobre o agendamento (critério 7)
+
+O workflow tem o gatilho `schedule`, mas **o serviço de agendamento do GitHub não criou nenhuma execução para esta
+conta**: nenhum horário do cron foi atendido em mais de 6 horas, nem num repositório de teste mínimo com cron a cada
+5 minutos, sem incidente na página de status do GitHub. Como solução equivalente, o próprio workflow encadeia os ciclos:
+ao fim de cada ciclo bem-sucedido, o job `agendar-proximo` espera um intervalo e dispara o seguinte. Por isso os ciclos
+aparecem no Actions como *Manually run by github-actions[bot]* (`origem = encadeado`), e não como `schedule`. Detalhes
+em [Execução agendada](#execução-agendada-github-actions) e a linha do tempo com as consultas à API em
+[`evidencias/agendamento/`](evidencias/agendamento).
 
 ## Problema e dados
 
@@ -41,8 +80,9 @@ econômico diferente e a validação mediria só essa ruptura (AUC ≈ 0,5 para 
 ## Fluxo de um ciclo
 
 ```
-schedule (cron) ─► 01 ETL + validação + drift ─► 02 três métodos + votação ─► 03 Modelo A × Modelo B
-               ─► 04 eleição + regra de promoção ─► 05 previsões + teste integrado ─► commit do estado + artifact
+schedule (cron) ou ─► 01 ETL + validação + drift ─► 02 três métodos + votação ─► 03 Modelo A × Modelo B
+ciclo anterior      ─► 04 eleição + regra de promoção ─► 05 previsões + teste integrado ─► commit do estado + artifact
+                    ─► agendar-proximo (dispara o ciclo seguinte enquanto o contador da sequência for maior que zero)
 ```
 
 | Notebook | Responsabilidade | Saídas no ciclo (`evidencias/ciclos/<cycle_id>/`) |
@@ -146,11 +186,18 @@ gh workflow run pipeline_mlops.yml -f origem=inicio -f ciclos_restantes=6 -f int
 Daí em diante não há intervenção humana; uma falha interrompe a sequência. O cron continua no YAML e, quando o GitHub
 atende algum horário, o ciclo aparece com gatilho `schedule`.
 
+O gatilho e a origem de cada ciclo ficam registrados em `evidencias/ciclos/<cycle_id>/execucao.json`, no resumo do job
+e na mensagem do commit do ciclo.
+
 **Situação na entrega:** a sequência executou 7 ciclos (18:15–18:58 UTC de 23/11/2026, todos com sucesso) e o workflow
-foi desligado em seguida para não gerar ciclos sem dados novos. Para religar:
-`gh workflow enable pipeline_mlops.yml`. A linha do tempo do agendamento está em `evidencias/agendamento/`. Requisitos no repositório: *Settings → Actions → General → Workflow permissions → Read and write*. O
-agendamento só roda na branch padrão. O gatilho e a origem de cada ciclo ficam registrados em
-`evidencias/ciclos/<cycle_id>/execucao.json`.
+foi **desligado** em seguida, para não gerar ciclos sem dados novos. Para religar:
+
+```bash
+gh workflow enable pipeline_mlops.yml
+```
+
+Requisitos para o workflow funcionar num fork ou cópia: *Settings → Actions → General → Workflow permissions → Read and
+write*; o agendamento só roda na branch padrão.
 
 ### Preparar os dados do zero (opcional)
 
@@ -186,7 +233,7 @@ Saída em `reports/relatorio_n3.html` e `reports/relatorio_n3.pdf` (o PDF usa o 
 | 4 | Votação e eleição | `votacao.csv`, `features_eleitas.json`, run `votacao_features` no MLflow |
 | 5 | Dois algoritmos | notebook 03, runs `modelo_a-*` e `modelo_b-*` com o mesmo `cycle_id` |
 | 6 | MLflow e rastreabilidade | `state/mlflow.db`, `scripts/abrir_mlflow.py`, `state/historico_ciclos.csv` |
-| 7 | Workflow único e agendamento | `.github/workflows/pipeline_mlops.yml`, aba Actions, `execucao.json` |
+| 7 | Workflow único e agendamento | `.github/workflows/pipeline_mlops.yml`, aba Actions, `execucao.json`, `evidencias/agendamento/` |
 | 8 | Eleição, promoção e previsões | notebooks 04 e 05, `models/modelo_vigente.json`, `decisao.json`, `previsoes.csv` |
 | 9 | Repositório, relatório e evidências | este README, `reports/`, `evidencias/` |
 | 10 | Recurso adicional | monitoramento de drift com alerta (seção acima) |
