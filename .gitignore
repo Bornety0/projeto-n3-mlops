@@ -1,0 +1,23 @@
+# Ambiente e cache
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+.DS_Store
+
+# Dados intermediários regenerados a cada ciclo (a versão fica em state/ e no MLflow)
+data/processed/*
+!data/processed/.gitkeep
+data/raw/original/
+
+# Ponteiro do ciclo em andamento (só faz sentido na máquina que está executando)
+state/.ciclo_corrente
+
+# MLflow padrão (o projeto usa state/mlflow.db + state/mlartifacts, que SÃO versionados)
+mlruns/
+
+# Segredos
+.env
+*.env

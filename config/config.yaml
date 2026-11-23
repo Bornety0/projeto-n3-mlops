@@ -1,0 +1,109 @@
+# Configuração única do pipeline MLOps (Trabalho N3 - Análise Preditiva).
+# Tudo o que define a avaliação (métrica, votação, regra de promoção) é fixado
+# aqui ANTES do primeiro treinamento; o histórico do Git comprova a ordem.
+
+projeto:
+  nome: n3-bank-marketing
+  seed: 42
+
+dados:
+  fonte: "UCI Machine Learning Repository - Bank Marketing (id 222), arquivo bank-additional-full.csv"
+  url: "https://archive.ics.uci.edu/static/public/222/bank+marketing.zip"
+  licenca: "CC BY 4.0"
+  sha256_original: "74adfc578bf77a7ff4bb1ba4a9f8709d9e3c6907342959c2c8416847e0afb4d8"
+  separador: ";"
+  alvo: y
+  classe_positiva: "yes"
+  id: registro_id
+  # 'duration' só é conhecida depois que a ligação termina: usá-la seria vazamento.
+  colunas_removidas: [duration]
+  diretorio_lotes: data/raw/lotes
+  arquivo_teste: data/holdout/teste.csv
+  diretorio_processado: data/processed
+  estado_ingestao: state/estado_ingestao.json
+
+particionamento:
+  # Os registros estão em ordem cronológica (mai/2008 a nov/2010).
+  fracao_teste: 0.10          # amostra estratificada de todo o período -> teste reservado (nunca usado em decisões)
+  # O início da série (mai-jun/2008) quase não varia nos indicadores econômicos e não tem
+  # campanhas anteriores (poutcome sempre 'nonexistent'); com 70% o ciclo inicial já tem sinal.
+  fracao_lote_inicial: 0.70   # primeiros 70% (cronológicos) do restante -> lote_001
+  n_lotes_adicionais: 4       # restante dividido em lote_002..lote_005
+  lotes_por_ciclo: 1          # quantos lotes novos cada ciclo incorpora
+  # Validação = registros cujo hash do registro_id cai nos primeiros 20%. A atribuição é
+  # fixa entre ciclos: o modelo vigente nunca treinou com registros da validação atual,
+  # o que torna justa a comparação vigente x candidato.
+  fracao_validacao: 0.20
+
+qualidade_dados:
+  idade_min: 17
+  idade_max: 100
+  campaign_max: 100
+  max_fracao_ausentes: 0.30
+
+features:
+  numericas: [age, campaign_log, pdays_dias, previous, emp.var.rate, cons.price.idx, cons.conf.idx, euribor3m, nr.employed, qtd_desconhecidos]
+  categoricas: [job, marital, education, default, housing, loan, contact, month, day_of_week, poutcome, contatado_antes, faixa_etaria]
+
+votacao:
+  top_k: 10                 # cada método aprova as 10 melhores features
+  votos_minimos: 2          # eleita se aprovada por >= 2 dos 3 métodos
+  min_features: 6           # se a votação eleger menos, completa pelo ranking médio
+  desempate: ranking_medio  # menor posição média entre os 3 métodos
+  metodos:
+    selectkbest:
+      estatistica: mutual_info_classif
+    random_forest:
+      n_estimators: 200
+      max_depth: 10
+      min_samples_leaf: 5
+    rfe:
+      estimador: LogisticRegression
+      step: 1
+
+modelos:
+  modelo_a:
+    nome: logistic_regression
+    classe: sklearn.linear_model.LogisticRegression
+    parametros:
+      C: 1.0
+      max_iter: 2000
+      class_weight: balanced
+  modelo_b:
+    nome: hist_gradient_boosting
+    classe: sklearn.ensemble.HistGradientBoostingClassifier
+    parametros:
+      learning_rate: 0.08
+      max_iter: 300
+      max_leaf_nodes: 31
+      l2_regularization: 1.0
+      class_weight: balanced
+      random_state: 42
+
+avaliacao:
+  # A taxa de 'yes' varia de ~5% a ~44% entre lotes. ROC-AUC independe do limiar e da
+  # prevalência e mede a capacidade de ORDENAR clientes - o uso real (priorizar ligações).
+  metrica_principal: roc_auc
+  direcao: maximizar
+  metricas_secundarias: [f1_macro, balanced_accuracy, precision_pos, recall_pos]
+
+promocao:
+  melhoria_minima: 0.01      # candidato precisa superar o vigente em >= 0,01 de ROC-AUC
+  metrica_minima: 0.60       # piso absoluto (0,50 = ordenação aleatória)
+  diretorio_historico: models/historico
+  manifesto: models/modelo_vigente.json
+
+drift:
+  psi_alerta: 0.20           # PSI >= 0,20 indica mudança relevante de distribuição
+  psi_atencao: 0.10
+  n_bins: 10
+  min_features_alerta: 3     # alerta de ciclo se >= 3 atributos ultrapassarem o limiar
+
+mlflow:
+  tracking_db: state/mlflow.db
+  artifacts_dir: state/mlartifacts
+  experimento: n3-bank-marketing
+
+saida:
+  diretorio_evidencias: evidencias/ciclos
+  historico_ciclos: state/historico_ciclos.csv

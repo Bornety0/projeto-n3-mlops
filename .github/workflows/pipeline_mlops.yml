@@ -1,0 +1,129 @@
+# Workflow ÚNICO do projeto: cada execução é um ciclo completo do pipeline MLOps.
+# schedule = gatilho avaliado; workflow_dispatch = apenas depuração.
+name: pipeline-mlops
+
+on:
+  schedule:
+    # 2 ciclos por dia (09:17 e 21:17 UTC). Minuto "quebrado" porque o GitHub atrasa
+    # mais os agendamentos na virada da hora.
+    - cron: "17 9,21 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write   # devolver state/, models/ e evidencias/ ao repositório
+  issues: write     # abrir issue quando houver alerta de drift
+
+# Ciclos nunca rodam em paralelo: cada um depende do estado deixado pelo anterior.
+concurrency:
+  group: pipeline-mlops
+  cancel-in-progress: false
+
+jobs:
+  ciclo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      MPLBACKEND: Agg
+      PYTHONHASHSEED: "0"
+    steps:
+      - name: Checkout (inclui estado persistido dos ciclos anteriores)
+        uses: actions/checkout@v5
+
+      - name: Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instalar dependências
+        run: python -m pip install -r requirements.txt
+
+      - name: Testes das regras do pipeline
+        run: python -m pytest -q
+
+      - name: Identificar ciclo
+        run: |
+          CYCLE_ID="c$(date -u +%Y%m%dT%H%M%SZ)-gh${GITHUB_RUN_ID}"
+          echo "CYCLE_ID=${CYCLE_ID}" >> "$GITHUB_ENV"
+          echo "PASTA_CICLO=evidencias/ciclos/${CYCLE_ID}" >> "$GITHUB_ENV"
+          echo "Ciclo ${CYCLE_ID} disparado por: ${{ github.event_name }}"
+          echo "Modelo vigente antes do ciclo:"
+          cat models/modelo_vigente.json 2>/dev/null || echo "(nenhum)"
+
+      - name: 01 - ETL, validação e drift
+        run: jupyter nbconvert --to notebook --execute notebooks/01_etl.ipynb --output-dir "$PASTA_CICLO/notebooks" --output 01_etl_executado --ExecutePreprocessor.timeout=1800
+
+      - name: 02 - Três métodos e votação de features
+        run: jupyter nbconvert --to notebook --execute notebooks/02_votacao_features.ipynb --output-dir "$PASTA_CICLO/notebooks" --output 02_votacao_features_executado --ExecutePreprocessor.timeout=1800
+
+      - name: 03 - Treino dos modelos A e B
+        run: jupyter nbconvert --to notebook --execute notebooks/03_treino_competicao.ipynb --output-dir "$PASTA_CICLO/notebooks" --output 03_treino_competicao_executado --ExecutePreprocessor.timeout=1800
+
+      - name: 04 - Eleição e promoção
+        run: jupyter nbconvert --to notebook --execute notebooks/04_selecao_promocao.ipynb --output-dir "$PASTA_CICLO/notebooks" --output 04_selecao_promocao_executado --ExecutePreprocessor.timeout=1800
+
+      - name: 05 - Previsões com o vigente e teste integrado
+        run: jupyter nbconvert --to notebook --execute notebooks/05_previsoes.ipynb --output-dir "$PASTA_CICLO/notebooks" --output 05_previsoes_executado --ExecutePreprocessor.timeout=1800
+
+      - name: Registrar evidência da execução
+        if: always()
+        run: |
+          mkdir -p "$PASTA_CICLO"
+          cat > "$PASTA_CICLO/execucao.json" <<EOF
+          {
+            "cycle_id": "${CYCLE_ID}",
+            "gatilho": "${{ github.event_name }}",
+            "cron": "${{ github.event.schedule }}",
+            "run_id": "${GITHUB_RUN_ID}",
+            "run_attempt": "${GITHUB_RUN_ATTEMPT}",
+            "run_url": "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}",
+            "commit": "${GITHUB_SHA}",
+            "status_job": "${{ job.status }}"
+          }
+          EOF
+          cat "$PASTA_CICLO/execucao.json"
+
+      - name: Resumo do ciclo
+        if: always()
+        run: |
+          echo "**Gatilho:** \`${{ github.event_name }}\`" >> "$GITHUB_STEP_SUMMARY"
+          for arquivo in resumo.md drift.md; do
+            if [ -f "$PASTA_CICLO/$arquivo" ]; then cat "$PASTA_CICLO/$arquivo" >> "$GITHUB_STEP_SUMMARY"; fi
+          done
+
+      - name: Abrir issue se houver alerta de drift (critério 10)
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ALERTA=$(python -c "import json; print(json.load(open('$PASTA_CICLO/drift.json')).get('alerta', False))")
+          if [ "$ALERTA" = "True" ]; then
+            gh issue create --title "Alerta de drift - ciclo ${CYCLE_ID}" --body-file "$PASTA_CICLO/drift.md"
+          else
+            echo "Sem alerta de drift neste ciclo."
+          fi
+
+      - name: Persistir estado no repositório
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state models evidencias
+          git commit -m "ciclo ${CYCLE_ID} (${{ github.event_name }})"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      # Só o que é deste ciclo: o histórico completo (MLflow, modelos) já volta ao repositório
+      # pelo commit acima, e state/ inteiro cresceria a cada ciclo, consumindo a cota de
+      # armazenamento de artifacts (500 MB em repositório privado no plano Free).
+      - name: Publicar pacote do ciclo (artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ciclo-${{ env.CYCLE_ID }}
+          path: |
+            ${{ env.PASTA_CICLO }}
+            models/modelo_vigente.json
+            state/historico_ciclos.csv
+          if-no-files-found: warn
+          retention-days: 30
