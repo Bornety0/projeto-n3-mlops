@@ -1,0 +1,63 @@
+{
+  "cycle_id": "c20261123T121736Z-gh45172772092",
+  "data_version": "v002-86b526b7",
+  "candidato": "modelo_b",
+  "algoritmo": "hist_gradient_boosting",
+  "run_id": "9ed8843ee01a4e8cb38cc2ad276b03dc",
+  "experimento": "n3-bank-marketing",
+  "features": [
+    "euribor3m",
+    "month",
+    "cons.conf.idx",
+    "emp.var.rate",
+    "education",
+    "nr.employed",
+    "job",
+    "cons.price.idx",
+    "poutcome",
+    "contact"
+  ],
+  "metrica": {
+    "nome": "roc_auc",
+    "validacao": 0.7073
+  },
+  "caminho_modelo": "models/historico/c20261123T121736Z-gh45172772092__hist_gradient_boosting.joblib",
+  "promovido_em": "2026-11-23T12:18:21+00:00",
+  "promocoes_anteriores": [
+    {
+      "cycle_id": "c20261123T121302Z-gh45172042466",
+      "algoritmo": "logistic_regression",
+      "run_id": "884b726696854a3ab8117109a1e43464",
+      "caminho_modelo": "models/historico/c20261123T121302Z-gh45172042466__logistic_regression.joblib",
+      "data_version": "v001-a59ff626",
+      "promovido_em": "2026-11-23T12:13:43+00:00"
+    }
+  ],
+  "ultimo_ciclo": {
+    "cycle_id": "c20261123T121736Z-gh45172772092",
+    "data_version": "v002-86b526b7",
+    "decisao": "promover",
+    "motivo": "Ganho de +0.0126 >= limiar 0.01.",
+    "criterios": {
+      "qualidade_ok": true,
+      "acima_do_piso": true,
+      "metrica_candidato": 0.7073,
+      "metrica_vigente": 0.6947,
+      "piso": 0.6,
+      "melhoria_minima": 0.01,
+      "ganho": 0.0126,
+      "supera_limiar": true
+    },
+    "avaliado_em": "2026-11-23T12:18:21+00:00",
+    "teste_vigente": {
+      "f1_macro": 0.5326,
+      "balanced_accuracy": 0.6051,
+      "accuracy": 0.6866,
+      "precision_pos": 0.1797,
+      "recall_pos": 0.5,
+      "n": 4119,
+      "taxa_positiva_real": 0.1126,
+      "roc_auc": 0.644
+    }
+  }
+}
