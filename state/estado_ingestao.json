@@ -51,6 +51,17 @@
         "lote_004.csv",
         "lote_005.csv"
       ]
+    },
+    {
+      "cycle_id": "c20261123T185002Z-gh45242395959",
+      "data_version": "v005-6563af51",
+      "lotes": [
+        "lote_001.csv",
+        "lote_002.csv",
+        "lote_003.csv",
+        "lote_004.csv",
+        "lote_005.csv"
+      ]
     }
   ]
 }

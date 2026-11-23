@@ -42,7 +42,7 @@
     }
   ],
   "ultimo_ciclo": {
-    "cycle_id": "c20261123T184307Z-gh45241187784",
+    "cycle_id": "c20261123T185002Z-gh45242395959",
     "data_version": "v005-6563af51",
     "decisao": "manter_vigente",
     "motivo": "Ganho de +0.0093 < limiar 0.01.",
@@ -56,7 +56,7 @@
       "ganho": 0.0093,
       "supera_limiar": false
     },
-    "avaliado_em": "2026-11-23T18:43:52+00:00",
+    "avaliado_em": "2026-11-23T18:50:45+00:00",
     "teste_vigente": {
       "f1_macro": 0.6674,
       "balanced_accuracy": 0.7574,
