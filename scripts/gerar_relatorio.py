@@ -52,8 +52,15 @@ def esc(valor) -> str:
     return html.escape("" if valor is None or (isinstance(valor, float) and pd.isna(valor)) else str(valor))
 
 
-def tabela_html(df: pd.DataFrame, indice: bool = False) -> str:
-    return df.to_html(index=indice, border=0, classes="tabela", na_rep="-", escape=True)
+def tabela_html(df: pd.DataFrame, indice: bool = False, colunas_html: tuple[str, ...] = ()) -> str:
+    """Escapa todas as células, exceto as colunas que já trazem HTML montado aqui (links)."""
+    if not colunas_html:
+        return df.to_html(index=indice, border=0, classes="tabela", na_rep="-", escape=True)
+    seguro = df.copy()
+    for coluna in seguro.columns:
+        if coluna not in colunas_html:
+            seguro[coluna] = seguro[coluna].map(esc)
+    return seguro.to_html(index=indice, border=0, classes="tabela", na_rep="-", escape=False)
 
 
 def grafico_base64(fig) -> str:
@@ -290,7 +297,7 @@ dispara o ciclo seguinte (<code>origem = encadeado</code>), decrementando um con
 permanece no YAML: execuções por <code>schedule</code>, quando ocorrem, aparecem na tabela abaixo com esse gatilho.</p>
 
 <h2>8. Evidências de execução</h2>
-{tabela_html(execucoes)}
+{tabela_html(execucoes, colunas_html=("execução no GitHub",))}
 <p>Cada ciclo guarda em <code>evidencias/ciclos/&lt;cycle_id&gt;/</code> os notebooks executados, <code>execucao.json</code>
 (gatilho e link da execução), contrato de dados, diagnóstico, votação, comparação, decisão, drift e previsões.
 O MLflow é consultado com <code>python scripts/abrir_mlflow.py</code>.</p>
