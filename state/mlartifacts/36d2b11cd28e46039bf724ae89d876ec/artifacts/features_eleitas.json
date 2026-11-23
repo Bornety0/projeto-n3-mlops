@@ -1,0 +1,14 @@
+{
+  "features": [
+    "euribor3m",
+    "month",
+    "nr.employed",
+    "cons.conf.idx",
+    "emp.var.rate",
+    "faixa_etaria",
+    "contact",
+    "cons.price.idx",
+    "job",
+    "education"
+  ]
+}

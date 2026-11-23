@@ -1,0 +1,39 @@
+{
+  "vencedor": "modelo_b",
+  "metricas_candidatos": {
+    "modelo_a": 0.6839,
+    "modelo_b": 0.6887
+  },
+  "metricas_vigente_anterior": {
+    "f1_macro": 0.5108,
+    "balanced_accuracy": 0.6355,
+    "accuracy": 0.7148,
+    "precision_pos": 0.1187,
+    "recall_pos": 0.5446,
+    "n": 6372,
+    "taxa_positiva_real": 0.0634,
+    "roc_auc": 0.689
+  },
+  "decisao": "manter_vigente",
+  "motivo": "Ganho de -0.0003 < limiar 0.01.",
+  "criterios": {
+    "qualidade_ok": true,
+    "acima_do_piso": true,
+    "metrica_candidato": 0.6887,
+    "metrica_vigente": 0.689,
+    "piso": 0.6,
+    "melhoria_minima": 0.01,
+    "ganho": -0.0003,
+    "supera_limiar": false
+  },
+  "teste_vigente": {
+    "f1_macro": 0.5326,
+    "balanced_accuracy": 0.6051,
+    "accuracy": 0.6866,
+    "precision_pos": 0.1797,
+    "recall_pos": 0.5,
+    "n": 4119,
+    "taxa_positiva_real": 0.1126,
+    "roc_auc": 0.644
+  }
+}

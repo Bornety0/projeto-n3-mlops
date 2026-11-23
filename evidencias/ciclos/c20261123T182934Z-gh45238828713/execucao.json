@@ -1,0 +1,13 @@
+{
+  "cycle_id": "c20261123T182934Z-gh45238828713",
+  "gatilho": "workflow_dispatch",
+  "origem": "encadeado",
+  "ciclos_restantes_na_sequencia": "4",
+  "ator": "github-actions[bot]",
+  "cron": "",
+  "run_id": "45238828713",
+  "run_attempt": "1",
+  "run_url": "https://github.com/Bornety0/projeto-n3-mlops/actions/runs/45238828713",
+  "commit": "8c8309182e2811738dedd5ee7836b90e62e70a79",
+  "status_job": "success"
+}
