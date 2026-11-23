@@ -36,6 +36,7 @@ sys.path.insert(0, str(RAIZ))
 from src.config import caminho, carregar_config  # noqa: E402
 
 INTEGRANTES = ["Matheus Sady", "Rafael Venturi", "Rafael de Lara"]
+REPOSITORIO = "https://github.com/Bornety0/projeto-n3-mlops"
 # 'inicio' abre a sequência automática; os ciclos seguintes chegam como 'encadeado'.
 ORIGENS_AUTOMATICAS = {"schedule", "inicio", "encadeado"}
 NAVEGADORES = [
@@ -283,6 +284,7 @@ def montar_html(cfg: dict, ciclos: pd.DataFrame) -> str:
 <h1>Relatório Técnico · Trabalho N3 · Projeto Integrador de MLOps</h1>
 <p>Católica de Santa Catarina · Análise Preditiva · Prof. M. Sc. Rodrigo Hagstrom<br>
 <b>Integrantes:</b> {esc(" · ".join(INTEGRANTES))}<br>
+<b>Repositório:</b> <a href="{REPOSITORIO}">{REPOSITORIO}</a><br>
 <b>Ciclos considerados:</b> {len(ciclos)} ({n_automaticos} automáticos, dos quais {n_agendados} por <code>schedule</code>) · <b>runs no MLflow:</b> {contar_runs_mlflow(cfg)}</p>
 
 <h2>1. Problema e dados</h2>

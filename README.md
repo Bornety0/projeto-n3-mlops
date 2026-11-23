@@ -4,6 +4,10 @@ Católica de Santa Catarina · Análise Preditiva · Prof. M. Sc. Rodrigo Hagstr
 
 **Integrantes:** Matheus Sady · Rafael Venturi · Rafael de Lara
 
+**Entregáveis:** relatório técnico em [`reports/relatorio_n3.pdf`](reports/relatorio_n3.pdf) · evidências dos ciclos em
+[`evidencias/ciclos/`](evidencias/ciclos) · capturas de tela em [`evidencias/prints/`](evidencias/prints) · histórico do
+MLflow em `state/mlflow.db` (abrir com `python scripts/abrir_mlflow.py`).
+
 Pipeline MLOps único e agendado que, a cada ciclo, incorpora um novo lote de dados, elege features por votação entre
 três métodos, coloca dois algoritmos para competir, registra tudo no MLflow e decide automaticamente se o modelo
 vigente deve ser substituído.
@@ -140,7 +144,11 @@ gh workflow run pipeline_mlops.yml -f origem=inicio -f ciclos_restantes=6 -f int
 ```
 
 Daí em diante não há intervenção humana; uma falha interrompe a sequência. O cron continua no YAML e, quando o GitHub
-atende algum horário, o ciclo aparece com gatilho `schedule`. Requisitos no repositório: *Settings → Actions → General → Workflow permissions → Read and write*. O
+atende algum horário, o ciclo aparece com gatilho `schedule`.
+
+**Situação na entrega:** a sequência executou 7 ciclos (18:15–18:58 UTC de 23/11/2026, todos com sucesso) e o workflow
+foi desligado em seguida para não gerar ciclos sem dados novos. Para religar:
+`gh workflow enable pipeline_mlops.yml`. A linha do tempo do agendamento está em `evidencias/agendamento/`. Requisitos no repositório: *Settings → Actions → General → Workflow permissions → Read and write*. O
 agendamento só roda na branch padrão. O gatilho e a origem de cada ciclo ficam registrados em
 `evidencias/ciclos/<cycle_id>/execucao.json`.
 
