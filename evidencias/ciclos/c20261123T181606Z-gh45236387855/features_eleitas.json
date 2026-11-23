@@ -1,0 +1,16 @@
+{
+  "cycle_id": "c20261123T181606Z-gh45236387855",
+  "data_version": "v001-a59ff626",
+  "features": [
+    "euribor3m",
+    "month",
+    "cons.conf.idx",
+    "nr.employed",
+    "emp.var.rate",
+    "faixa_etaria",
+    "cons.price.idx",
+    "job",
+    "education",
+    "contact"
+  ]
+}

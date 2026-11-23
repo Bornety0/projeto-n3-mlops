@@ -1,0 +1,14 @@
+{
+  "lotes_incorporados": [
+    "lote_001.csv"
+  ],
+  "versoes": [
+    {
+      "cycle_id": "c20261123T181606Z-gh45236387855",
+      "data_version": "v001-a59ff626",
+      "lotes": [
+        "lote_001.csv"
+      ]
+    }
+  ]
+}

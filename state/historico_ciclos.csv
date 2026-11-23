@@ -1,0 +1,2 @@
+cycle_id,data_version,lotes_novos,n_treino,n_validacao,features_eleitas,n_features,roc_auc_modelo_a,roc_auc_modelo_b,vencedor,roc_auc_vigente_anterior,decisao,vigente_apos,roc_auc_teste_vigente,drift_alerta
+c20261123T181606Z-gh45236387855,v001-a59ff626,lote_001.csv,20715,5227,euribor3m|month|cons.conf.idx|nr.employed|emp.var.rate|faixa_etaria|cons.price.idx|job|education|contact,10,0.6658,0.6479,logistic_regression,,promover,c20261123T181606Z-gh45236387855__logistic_regression,0.7164,False
