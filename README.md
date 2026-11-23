@@ -124,10 +124,25 @@ modelo.predict_proba(teste)[:, 1]
 
 ### Execução agendada (GitHub Actions)
 
-`.github/workflows/pipeline_mlops.yml` é o **único** workflow: `schedule` (a cada 20 minutos, nos minutos 07, 27 e 47)
-e `workflow_dispatch` para depuração. Requisitos no repositório: *Settings → Actions → General → Workflow permissions → Read and write*. O
-agendamento só roda na branch padrão. O gatilho de cada ciclo fica registrado em
-`evidencias/ciclos/<cycle_id>/execucao.json` (`"gatilho": "schedule"`).
+`.github/workflows/pipeline_mlops.yml` é o **único** workflow, com dois gatilhos:
+
+- `schedule` — cron a cada 20 minutos (minutos 07, 27 e 47);
+- `workflow_dispatch` — depuração (`origem = manual`) e **sequência automática** (`origem = inicio` / `encadeado`).
+
+**Por que existe a sequência automática.** Durante o trabalho, o serviço de agendamento do GitHub não criou nenhuma
+execução para a conta deste repositório: os disparos manuais funcionavam, mas nenhum horário do cron foi atendido — nem
+num repositório de teste mínimo (workflow que só imprime uma mensagem, cron a cada 5 minutos), e sem incidente na página de
+status do GitHub. Como solução equivalente, o job `agendar-proximo` do mesmo workflow espera um intervalo ao fim de cada
+ciclo bem-sucedido e dispara o seguinte, decrementando um contador. A sequência é aberta uma única vez:
+
+```bash
+gh workflow run pipeline_mlops.yml -f origem=inicio -f ciclos_restantes=6 -f intervalo_minutos=5
+```
+
+Daí em diante não há intervenção humana; uma falha interrompe a sequência. O cron continua no YAML e, quando o GitHub
+atende algum horário, o ciclo aparece com gatilho `schedule`. Requisitos no repositório: *Settings → Actions → General → Workflow permissions → Read and write*. O
+agendamento só roda na branch padrão. O gatilho e a origem de cada ciclo ficam registrados em
+`evidencias/ciclos/<cycle_id>/execucao.json`.
 
 ### Preparar os dados do zero (opcional)
 
@@ -148,7 +163,7 @@ python -m pytest -q
 Gerado a partir das evidências reais dos ciclos (tabelas de votos, comparação, decisões, drift e links das execuções):
 
 ```bash
-python scripts/gerar_relatorio.py --somente-agendados --pdf
+python scripts/gerar_relatorio.py --somente-automaticos --pdf
 ```
 
 Saída em `reports/relatorio_n3.html` e `reports/relatorio_n3.pdf` (o PDF usa o Chrome/Chromium em modo headless).

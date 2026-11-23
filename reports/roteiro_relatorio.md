@@ -4,7 +4,7 @@ Estrutura exigida pela seção 7 do enunciado. O relatório é gerado a partir d
 
 ```bash
 git pull
-python scripts/gerar_relatorio.py --somente-agendados --pdf
+python scripts/gerar_relatorio.py --somente-automaticos --pdf
 ```
 
 O script preenche as seções 1-10 abaixo com tabelas e gráficos. Antes de entregar, o grupo revisa o texto, acrescenta

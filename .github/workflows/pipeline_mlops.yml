@@ -1,18 +1,36 @@
 # Workflow ÚNICO do projeto: cada execução é um ciclo completo do pipeline MLOps.
-# schedule = gatilho avaliado; workflow_dispatch = apenas depuração.
+#
+# Gatilhos:
+# - schedule: agendamento nativo do GitHub (cron).
+# - workflow_dispatch com origem=encadeado: agendamento automático de contingência. O serviço
+#   de agendamento do GitHub não criou nenhuma execução nesta conta (nem num repositório de
+#   teste mínimo com cron a cada 5 min); por isso, ao fim de cada ciclo bem-sucedido, o job
+#   'agendar-proximo' espera o intervalo e dispara o ciclo seguinte, até zerar o contador.
 name: pipeline-mlops
 
 on:
   schedule:
-    # A cada 20 minutos: o GitHub pode atrasar ou pular disparos, e com vários horários
-    # por hora os 5 lotes entram no mesmo dia. Minutos "quebrados" porque a fila do
-    # GitHub fica mais cheia na virada da hora. Desligar o workflow após coletar as evidências.
+    # Minutos "quebrados" porque a fila do GitHub fica mais cheia na virada da hora.
+    # Desligar o workflow após coletar as evidências.
     - cron: "7,27,47 * * * *"
   workflow_dispatch:
+    inputs:
+      origem:
+        description: "manual (depuração), inicio (abre uma sequência automática) ou encadeado (disparado pelo próprio pipeline)"
+        type: choice
+        options: [manual, inicio, encadeado]
+        default: manual
+      ciclos_restantes:
+        description: "Quantos ciclos ainda disparar automaticamente depois deste (0 = nenhum)"
+        default: "0"
+      intervalo_minutos:
+        description: "Espera entre o fim de um ciclo e o disparo do próximo"
+        default: "5"
 
 permissions:
   contents: write   # devolver state/, models/ e evidencias/ ao repositório
   issues: write     # abrir issue quando houver alerta de drift
+  actions: write    # disparar o próximo ciclo da sequência automática
 
 # Ciclos nunca rodam em paralelo: cada um depende do estado deixado pelo anterior.
 concurrency:
@@ -47,7 +65,7 @@ jobs:
           CYCLE_ID="c$(date -u +%Y%m%dT%H%M%SZ)-gh${GITHUB_RUN_ID}"
           echo "CYCLE_ID=${CYCLE_ID}" >> "$GITHUB_ENV"
           echo "PASTA_CICLO=evidencias/ciclos/${CYCLE_ID}" >> "$GITHUB_ENV"
-          echo "Ciclo ${CYCLE_ID} disparado por: ${{ github.event_name }}"
+          echo "Ciclo ${CYCLE_ID} disparado por: ${{ github.event_name }} (origem: ${{ inputs.origem || github.event_name }})"
           echo "Modelo vigente antes do ciclo:"
           cat models/modelo_vigente.json 2>/dev/null || echo "(nenhum)"
 
@@ -74,6 +92,9 @@ jobs:
           {
             "cycle_id": "${CYCLE_ID}",
             "gatilho": "${{ github.event_name }}",
+            "origem": "${{ inputs.origem || github.event_name }}",
+            "ciclos_restantes_na_sequencia": "${{ inputs.ciclos_restantes || '' }}",
+            "ator": "${{ github.actor }}",
             "cron": "${{ github.event.schedule }}",
             "run_id": "${GITHUB_RUN_ID}",
             "run_attempt": "${GITHUB_RUN_ATTEMPT}",
@@ -87,7 +108,7 @@ jobs:
       - name: Resumo do ciclo
         if: always()
         run: |
-          echo "**Gatilho:** \`${{ github.event_name }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Gatilho:** \`${{ github.event_name }}\` · **origem:** \`${{ inputs.origem || github.event_name }}\`" >> "$GITHUB_STEP_SUMMARY"
           for arquivo in resumo.md drift.md; do
             if [ -f "$PASTA_CICLO/$arquivo" ]; then cat "$PASTA_CICLO/$arquivo" >> "$GITHUB_STEP_SUMMARY"; fi
           done
@@ -110,7 +131,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add state models evidencias
-          git commit -m "ciclo ${CYCLE_ID} (${{ github.event_name }})"
+          git commit -m "ciclo ${CYCLE_ID} (${{ inputs.origem || github.event_name }})"
           git pull --rebase origin "${GITHUB_REF_NAME}"
           git push origin "HEAD:${GITHUB_REF_NAME}"
 
@@ -128,3 +149,24 @@ jobs:
             state/historico_ciclos.csv
           if-no-files-found: warn
           retention-days: 30
+
+  # Agendamento automático de contingência (ver comentário no topo). Só roda se o ciclo deu
+  # certo, então uma falha interrompe a sequência e nenhum ciclo seguinte é disparado.
+  agendar-proximo:
+    needs: ciclo
+    if: success() && github.event_name == 'workflow_dispatch' && inputs.ciclos_restantes != '0' && inputs.ciclos_restantes != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Aguardar o intervalo e disparar o próximo ciclo
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESTANTES: ${{ inputs.ciclos_restantes }}
+          INTERVALO: ${{ inputs.intervalo_minutos }}
+        run: |
+          PROXIMO=$(( RESTANTES - 1 ))
+          echo "Aguardando ${INTERVALO} min antes do próximo ciclo (restarão ${PROXIMO} depois dele)."
+          sleep $(( INTERVALO * 60 ))
+          gh workflow run pipeline_mlops.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" \
+            -f origem=encadeado -f ciclos_restantes="$PROXIMO" -f intervalo_minutos="$INTERVALO"
+          echo "**Próximo ciclo disparado automaticamente** (restam ${PROXIMO} na sequência)." >> "$GITHUB_STEP_SUMMARY"

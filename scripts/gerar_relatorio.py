@@ -2,7 +2,8 @@
 
 Uso:
     python scripts/gerar_relatorio.py                     # todos os ciclos
-    python scripts/gerar_relatorio.py --somente-agendados # só ciclos com gatilho 'schedule'
+    python scripts/gerar_relatorio.py --somente-automaticos # só ciclos disparados sem intervenção
+                                                            # (schedule ou sequência automática)
     python scripts/gerar_relatorio.py --pdf               # também gera o PDF (Chrome/Chromium headless)
 
 Saídas: reports/relatorio_n3.html e, com --pdf, reports/relatorio_n3.pdf.
@@ -34,6 +35,8 @@ sys.path.insert(0, str(RAIZ))
 from src.config import caminho, carregar_config  # noqa: E402
 
 INTEGRANTES = ["Matheus Sady", "Rafael Venturi", "Rafael de Lara"]
+# 'inicio' abre a sequência automática; os ciclos seguintes chegam como 'encadeado'.
+ORIGENS_AUTOMATICAS = {"schedule", "inicio", "encadeado"}
 NAVEGADORES = [
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
@@ -60,7 +63,7 @@ def grafico_base64(fig) -> str:
     return f'<img src="data:image/png;base64,{base64.b64encode(buffer.getvalue()).decode()}">'
 
 
-def carregar_ciclos(cfg: dict, somente_agendados: bool) -> pd.DataFrame:
+def carregar_ciclos(cfg: dict, somente_automaticos: bool) -> pd.DataFrame:
     arquivo = caminho(cfg, cfg["saida"]["historico_ciclos"])
     if not arquivo.exists():
         raise SystemExit("Nenhum ciclo executado ainda (state/historico_ciclos.csv não existe).")
@@ -68,9 +71,10 @@ def carregar_ciclos(cfg: dict, somente_agendados: bool) -> pd.DataFrame:
     pasta = caminho(cfg, cfg["saida"]["diretorio_evidencias"])
     execucoes = [ler_json(pasta / c / "execucao.json") for c in historico["cycle_id"]]
     historico["gatilho"] = [e.get("gatilho", "local") for e in execucoes]
+    historico["origem"] = [e.get("origem", e.get("gatilho", "local")) for e in execucoes]
     historico["run_url"] = [e.get("run_url", "") for e in execucoes]
-    if somente_agendados:
-        historico = historico[historico["gatilho"] == "schedule"]
+    if somente_automaticos:
+        historico = historico[historico["origem"].isin(ORIGENS_AUTOMATICAS)]
     if historico.empty:
         raise SystemExit("Nenhum ciclo com o filtro escolhido.")
     historico.insert(0, "ciclo", range(1, len(historico) + 1))
@@ -162,9 +166,10 @@ def montar_html(cfg: dict, ciclos: pd.DataFrame) -> str:
 
     competicao = ciclos[["ciclo", "data_version", "lotes_novos", "n_treino", "n_validacao", f"{metrica}_modelo_a", f"{metrica}_modelo_b", "vencedor"]]
     decisoes = ciclos[["ciclo", "vencedor", f"{metrica}_modelo_a", f"{metrica}_modelo_b", f"{metrica}_vigente_anterior", "decisao", "vigente_apos", f"{metrica}_teste_vigente"]]
-    execucoes = ciclos[["ciclo", "cycle_id", "gatilho", "data_version", "decisao"]].copy()
+    execucoes = ciclos[["ciclo", "cycle_id", "gatilho", "origem", "data_version", "decisao"]].copy()
     execucoes["execução no GitHub"] = [f'<a href="{esc(u)}">{esc(u.rsplit("/", 1)[-1])}</a>' if u else "-" for u in ciclos["run_url"]]
     n_agendados = int((ciclos["gatilho"] == "schedule").sum())
+    n_automaticos = int(ciclos["origem"].isin(ORIGENS_AUTOMATICAS).sum())
     promocoes = int((ciclos["decisao"] == "promover").sum())
     manutencoes = int((ciclos["decisao"] == "manter_vigente").sum())
     alertas = int(ciclos["drift_alerta"].astype(str).str.lower().eq("true").sum())
@@ -203,7 +208,7 @@ def montar_html(cfg: dict, ciclos: pd.DataFrame) -> str:
 <h1>Relatório Técnico · Trabalho N3 · Projeto Integrador de MLOps</h1>
 <p>Católica de Santa Catarina · Análise Preditiva · Prof. M. Sc. Rodrigo Hagstrom<br>
 <b>Integrantes:</b> {esc(" · ".join(INTEGRANTES))}<br>
-<b>Ciclos considerados:</b> {len(ciclos)} ({n_agendados} disparados por <code>schedule</code>) · <b>runs no MLflow:</b> {contar_runs_mlflow(cfg)}</p>
+<b>Ciclos considerados:</b> {len(ciclos)} ({n_automaticos} automáticos, dos quais {n_agendados} por <code>schedule</code>) · <b>runs no MLflow:</b> {contar_runs_mlflow(cfg)}</p>
 
 <h2>1. Problema e dados</h2>
 <p>Classificação binária: prever se o cliente contratará o depósito a prazo (<code>y</code>) oferecido por campanhas de
@@ -274,6 +279,15 @@ executa os testes das regras e, em sequência, os notebooks 01→05 num único j
 promoção. O estado do ciclo só é efetivado no notebook 04. Como o runner é temporário, o MLflow usa SQLite + artefatos em
 <code>state/</code>, e o workflow faz commit de <code>state/</code>, <code>models/</code> e <code>evidencias/</code> ao fim de cada ciclo;
 o ciclo seguinte parte do estado versionado. Cada execução também publica o pacote do ciclo como <i>artifact</i>.</p>
+<h3>Agendamento: cron nativo e contingência automática</h3>
+<p>O workflow declara o gatilho <code>schedule</code> (cron). Durante a execução do trabalho, o serviço de agendamento do
+GitHub não criou nenhuma execução para a conta do repositório: os disparos manuais funcionavam, mas nenhum horário do
+cron foi atendido — nem num repositório de teste mínimo (<code>teste-agendamento-n3</code>), com um workflow que só imprime
+uma mensagem e cron a cada 5 minutos. A página de status do GitHub não indicava incidente. Como solução equivalente, o
+mesmo workflow ganhou o job <code>agendar-proximo</code>: ao fim de cada ciclo bem-sucedido ele espera um intervalo e
+dispara o ciclo seguinte (<code>origem = encadeado</code>), decrementando um contador até zero. A sequência é aberta uma
+única vez (<code>origem = inicio</code>); daí em diante não há intervenção humana, e uma falha interrompe a sequência. O cron
+permanece no YAML: execuções por <code>schedule</code>, quando ocorrem, aparecem na tabela abaixo com esse gatilho.</p>
 
 <h2>8. Evidências de execução</h2>
 {tabela_html(execucoes)}
@@ -327,12 +341,12 @@ def gerar_pdf(origem: Path, destino: Path) -> bool:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--somente-agendados", action="store_true")
+    parser.add_argument("--somente-automaticos", action="store_true")
     parser.add_argument("--pdf", action="store_true")
     args = parser.parse_args()
 
     cfg = carregar_config(RAIZ)
-    ciclos = carregar_ciclos(cfg, args.somente_agendados)
+    ciclos = carregar_ciclos(cfg, args.somente_automaticos)
     saida = RAIZ / "reports" / "relatorio_n3.html"
     saida.write_text(montar_html(cfg, ciclos), encoding="utf-8")
     print(f"HTML: {saida.relative_to(RAIZ)} ({len(ciclos)} ciclos)")
