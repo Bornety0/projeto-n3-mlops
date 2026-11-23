@@ -1,0 +1,91 @@
+{
+  "cycle_id": "c20261123T121302Z-gh45172042466",
+  "data_version": "v001-a59ff626",
+  "lotes_novos": [
+    "lote_001.csv"
+  ],
+  "lotes_anteriores": [],
+  "lotes_pool": [
+    "lote_001.csv"
+  ],
+  "n_treino": 20715,
+  "n_validacao": 5227,
+  "n_teste": 4119,
+  "qualidade_ok": true,
+  "drift_alerta": false,
+  "mlflow_parent_run_id": "ed8c71a68d5c4a6abcf0c4dc260d6f54",
+  "features_eleitas": [
+    "euribor3m",
+    "month",
+    "cons.conf.idx",
+    "nr.employed",
+    "emp.var.rate",
+    "faixa_etaria",
+    "cons.price.idx",
+    "job",
+    "education",
+    "contact"
+  ],
+  "candidatos": {
+    "modelo_a": {
+      "nome": "logistic_regression",
+      "run_id": "884b726696854a3ab8117109a1e43464",
+      "metricas_validacao": {
+        "f1_macro": 0.4807,
+        "balanced_accuracy": 0.6118,
+        "accuracy": 0.6836,
+        "precision_pos": 0.0915,
+        "recall_pos": 0.5312,
+        "n": 5227,
+        "taxa_positiva_real": 0.0551,
+        "roc_auc": 0.6658
+      },
+      "metricas_treino": {
+        "f1_macro": 0.4762,
+        "balanced_accuracy": 0.601,
+        "accuracy": 0.6758,
+        "precision_pos": 0.0897,
+        "recall_pos": 0.5166,
+        "n": 20715,
+        "taxa_positiva_real": 0.0566,
+        "roc_auc": 0.6513
+      }
+    },
+    "modelo_b": {
+      "nome": "hist_gradient_boosting",
+      "run_id": "e1b93e8f31ee456cbb853716547bf13e",
+      "metricas_validacao": {
+        "f1_macro": 0.4826,
+        "balanced_accuracy": 0.6061,
+        "accuracy": 0.6912,
+        "precision_pos": 0.0907,
+        "recall_pos": 0.5104,
+        "n": 5227,
+        "taxa_positiva_real": 0.0551,
+        "roc_auc": 0.6479
+      },
+      "metricas_treino": {
+        "f1_macro": 0.5051,
+        "balanced_accuracy": 0.6843,
+        "accuracy": 0.6938,
+        "precision_pos": 0.117,
+        "recall_pos": 0.6735,
+        "n": 20715,
+        "taxa_positiva_real": 0.0566,
+        "roc_auc": 0.7614
+      }
+    }
+  },
+  "baseline_validacao": {
+    "f1_macro": 0.4858,
+    "balanced_accuracy": 0.5,
+    "accuracy": 0.9449,
+    "precision_pos": 0.0,
+    "recall_pos": 0.0,
+    "n": 5227,
+    "taxa_positiva_real": 0.0551,
+    "roc_auc": 0.5
+  },
+  "vencedor": "modelo_a",
+  "decisao": "promover"
+}

@@ -1,0 +1,28 @@
+{
+  "vencedor": "modelo_a",
+  "metricas_candidatos": {
+    "modelo_a": 0.6658,
+    "modelo_b": 0.6479
+  },
+  "metricas_vigente_anterior": null,
+  "decisao": "promover",
+  "motivo": "Não há modelo vigente e o candidato supera o piso.",
+  "criterios": {
+    "qualidade_ok": true,
+    "acima_do_piso": true,
+    "metrica_candidato": 0.6658,
+    "metrica_vigente": null,
+    "piso": 0.6,
+    "melhoria_minima": 0.01
+  },
+  "teste_vigente": {
+    "f1_macro": 0.4788,
+    "balanced_accuracy": 0.6438,
+    "accuracy": 0.5564,
+    "precision_pos": 0.17,
+    "recall_pos": 0.7565,
+    "n": 4119,
+    "taxa_positiva_real": 0.1126,
+    "roc_auc": 0.7164
+  }
+}
