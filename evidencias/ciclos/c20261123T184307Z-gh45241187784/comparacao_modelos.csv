@@ -1,0 +1,17 @@
+,modelo_a · logistic_regression,modelo_b · hist_gradient_boosting,baseline
+val_f1_macro,0.6794,0.6705,0.4714
+val_balanced_accuracy,0.7425,0.7429,0.5
+val_accuracy,0.8383,0.8272,0.8917
+val_precision_pos,0.3577,0.3404,0.0
+val_recall_pos,0.6203,0.6352,0.0
+val_n,7444.0,7444.0,7444.0
+val_taxa_positiva_real,0.1083,0.1083,0.1083
+val_roc_auc,0.799,0.8064,0.5
+treino_f1_macro,0.6792,0.6816,
+treino_balanced_accuracy,0.739,0.7526,
+treino_accuracy,0.8331,0.8289,
+treino_precision_pos,0.3628,0.361,
+treino_recall_pos,0.6172,0.6537,
+treino_n,29617.0,29617.0,
+treino_taxa_positiva_real,0.1138,0.1138,
+treino_roc_auc,0.79,0.8126,

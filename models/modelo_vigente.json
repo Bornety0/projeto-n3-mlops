@@ -42,21 +42,21 @@
     }
   ],
   "ultimo_ciclo": {
-    "cycle_id": "c20261123T183614Z-gh45240022843",
-    "data_version": "v004-d9278016",
-    "decisao": "promover",
-    "motivo": "Ganho de +0.0851 >= limiar 0.01.",
+    "cycle_id": "c20261123T184307Z-gh45241187784",
+    "data_version": "v005-6563af51",
+    "decisao": "manter_vigente",
+    "motivo": "Ganho de +0.0093 < limiar 0.01.",
     "criterios": {
       "qualidade_ok": true,
       "acima_do_piso": true,
-      "metrica_candidato": 0.7401,
-      "metrica_vigente": 0.655,
+      "metrica_candidato": 0.8064,
+      "metrica_vigente": 0.7971,
       "piso": 0.6,
       "melhoria_minima": 0.01,
-      "ganho": 0.0851,
-      "supera_limiar": true
+      "ganho": 0.0093,
+      "supera_limiar": false
     },
-    "avaliado_em": "2026-11-23T18:36:53+00:00",
+    "avaliado_em": "2026-11-23T18:43:52+00:00",
     "teste_vigente": {
       "f1_macro": 0.6674,
       "balanced_accuracy": 0.7574,

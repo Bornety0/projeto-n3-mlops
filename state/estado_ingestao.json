@@ -3,7 +3,8 @@
     "lote_001.csv",
     "lote_002.csv",
     "lote_003.csv",
-    "lote_004.csv"
+    "lote_004.csv",
+    "lote_005.csv"
   ],
   "versoes": [
     {
@@ -38,6 +39,17 @@
         "lote_002.csv",
         "lote_003.csv",
         "lote_004.csv"
+      ]
+    },
+    {
+      "cycle_id": "c20261123T184307Z-gh45241187784",
+      "data_version": "v005-6563af51",
+      "lotes": [
+        "lote_001.csv",
+        "lote_002.csv",
+        "lote_003.csv",
+        "lote_004.csv",
+        "lote_005.csv"
       ]
     }
   ]

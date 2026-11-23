@@ -1,0 +1,71 @@
+{
+  "cycle_id": "c20261123T183614Z-gh45240022843",
+  "data_version": "v004-d9278016",
+  "candidato": "modelo_b",
+  "algoritmo": "hist_gradient_boosting",
+  "run_id": "b5dc8f68a52a44d4952e8171783d6c09",
+  "experimento": "n3-bank-marketing",
+  "features": [
+    "euribor3m",
+    "emp.var.rate",
+    "cons.price.idx",
+    "contatado_antes",
+    "contact",
+    "nr.employed",
+    "month",
+    "poutcome",
+    "cons.conf.idx",
+    "job"
+  ],
+  "metrica": {
+    "nome": "roc_auc",
+    "validacao": 0.7401
+  },
+  "caminho_modelo": "models/historico/c20261123T183614Z-gh45240022843__hist_gradient_boosting.joblib",
+  "promovido_em": "2026-11-23T18:36:53+00:00",
+  "promocoes_anteriores": [
+    {
+      "cycle_id": "c20261123T181606Z-gh45236387855",
+      "algoritmo": "logistic_regression",
+      "run_id": "4fd2176beabd44e48edc2e69837574f0",
+      "caminho_modelo": "models/historico/c20261123T181606Z-gh45236387855__logistic_regression.joblib",
+      "data_version": "v001-a59ff626",
+      "promovido_em": "2026-11-23T18:16:44+00:00"
+    },
+    {
+      "cycle_id": "c20261123T182253Z-gh45237612466",
+      "algoritmo": "hist_gradient_boosting",
+      "run_id": "bbb0fc7e3598463680ee838286fd5414",
+      "caminho_modelo": "models/historico/c20261123T182253Z-gh45237612466__hist_gradient_boosting.joblib",
+      "data_version": "v002-86b526b7",
+      "promovido_em": "2026-11-23T18:23:32+00:00"
+    }
+  ],
+  "ultimo_ciclo": {
+    "cycle_id": "c20261123T184307Z-gh45241187784",
+    "data_version": "v005-6563af51",
+    "decisao": "manter_vigente",
+    "motivo": "Ganho de +0.0093 < limiar 0.01.",
+    "criterios": {
+      "qualidade_ok": true,
+      "acima_do_piso": true,
+      "metrica_candidato": 0.8064,
+      "metrica_vigente": 0.7971,
+      "piso": 0.6,
+      "melhoria_minima": 0.01,
+      "ganho": 0.0093,
+      "supera_limiar": false
+    },
+    "avaliado_em": "2026-11-23T18:43:52+00:00",
+    "teste_vigente": {
+      "f1_macro": 0.6674,
+      "balanced_accuracy": 0.7574,
+      "accuracy": 0.8099,
+      "precision_pos": 0.3337,
+      "recall_pos": 0.6897,
+      "n": 4119,
+      "taxa_positiva_real": 0.1126,
+      "roc_auc": 0.811
+    }
+  }
+}
