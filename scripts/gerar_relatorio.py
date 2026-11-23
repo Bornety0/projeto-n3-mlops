@@ -17,6 +17,7 @@ import base64
 import html
 import io
 import json
+import re
 import shutil
 import sqlite3
 import subprocess
@@ -170,6 +171,35 @@ def secao_prints() -> str:
     return "\n".join(blocos)
 
 
+def markdown_simples(texto: str) -> str:
+    """Converte o subconjunto de Markdown usado em reports/conclusao.md: ### títulos, listas com '- ',
+    parágrafos, **negrito** e `código`."""
+
+    def inline(trecho: str) -> str:
+        trecho = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", esc(trecho))
+        return re.sub(r"`(.+?)`", r"<code>\1</code>", trecho)
+
+    blocos = []
+    for bloco in re.split(r"\n\s*\n", texto.strip()):
+        linhas = [linha.strip() for linha in bloco.splitlines() if linha.strip()]
+        if linhas[0].startswith("### "):
+            blocos.append(f"<h3>{inline(linhas[0][4:])}</h3>")
+            linhas = linhas[1:]
+        if not linhas:
+            continue
+        if all(linha.startswith("- ") for linha in linhas):
+            blocos.append("<ul>" + "".join(f"<li>{inline(l[2:])}</li>" for l in linhas) + "</ul>")
+        else:
+            blocos.append(f"<p>{inline(' '.join(linhas))}</p>")
+    return "\n".join(blocos)
+
+
+def secao_conclusao() -> str:
+    """Texto das conclusões escrito pelo grupo em reports/conclusao.md (editável sem mexer no código)."""
+    arquivo = RAIZ / "reports" / "conclusao.md"
+    return markdown_simples(arquivo.read_text(encoding="utf-8")) if arquivo.exists() else ""
+
+
 def secao_drift(cfg: dict, ciclos: pd.DataFrame) -> str:
     pasta = caminho(cfg, cfg["saida"]["diretorio_evidencias"])
     linhas = []
@@ -217,6 +247,14 @@ def montar_html(cfg: dict, ciclos: pd.DataFrame) -> str:
         ["qtd_desconhecidos, faixa_etaria", "resumem incompletude do cadastro e perfil etário"],
         ["imputação, padronização e one-hot dentro do Pipeline", "ajustados somente no treino de cada ciclo (sem vazamento)"],
     ], columns=["tratamento", "justificativa"])
+
+    teste_final = manifesto.get("ultimo_ciclo", {}).get("teste_vigente", {}).get(metrica, "-")
+    conclusao = secao_conclusao() or (
+        f"<p>O pipeline executou {len(ciclos)} ciclo(s) de forma automática, refazendo a votação e a competição a cada"
+        f" ciclo e aplicando a regra de promoção sem intervenção: {promocoes} promoção(ões) e {manutencoes}"
+        f" manutenção(ões). O modelo vigente final é <b>{esc(manifesto.get('algoritmo'))}</b>, com {metrica} de"
+        f" {esc(teste_final)} no teste reservado.</p>"
+    )
 
     unknown = diagnostico.get("antes", {}).get("unknown", {})
     texto_unknown = ", ".join(f"{k}: {v}" for k, v in sorted(unknown.items(), key=lambda kv: -kv[1]))
@@ -349,6 +387,7 @@ resumo do job do GitHub Actions; <b>issue aberta automaticamente</b> quando há 
 {secao_drift(cfg, ciclos)}
 
 <h2>10. Limitações e conclusões</h2>
+<h3>Limitações</h3>
 <ul>
 <li>A chegada de dados é simulada por uma fila de lotes pré-definidos a partir de um dataset histórico.</li>
 <li>O teste reservado cobre todo o período; enquanto os lotes recentes não são incorporados, ele mede extrapolação para
@@ -359,10 +398,7 @@ previsão do futuro imediato.</li>
 <li>O estado em SQLite versionado no Git é adequado ao escopo acadêmico; em produção seria substituído por um servidor
 MLflow com armazenamento de objetos.</li>
 </ul>
-<p>O pipeline executou {len(ciclos)} ciclo(s) de forma automática, refazendo a votação e a competição a cada ciclo e
-aplicando a regra de promoção sem intervenção: {promocoes} promoção(ões) e {manutencoes} manutenção(ões). O modelo vigente
-final é <b>{esc(manifesto.get('algoritmo'))}</b>, com {metrica} de
-{esc(manifesto.get('ultimo_ciclo', {}).get('teste_vigente', {}).get(metrica, '-'))} no teste reservado.</p>
+{conclusao}
 </body></html>"""
 
 
