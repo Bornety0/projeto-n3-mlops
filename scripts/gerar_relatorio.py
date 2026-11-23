@@ -143,6 +143,33 @@ def grafico_metricas(ciclos: pd.DataFrame, metrica: str) -> str:
     return grafico_base64(fig)
 
 
+LEGENDAS_PRINTS = {
+    "01_actions_execucoes": "Execuções do workflow: o início da sequência por Bornety0 e os ciclos seguintes disparados pelo próprio pipeline (github-actions[bot]).",
+    "02_actions_filtro_schedule_vazio": "Filtro event:schedule no Actions: nenhuma execução criada pelo agendamento nativo, apesar do cron configurado.",
+    "03_execucao_ciclo4_promocao": "Ciclo com promoção: job ciclo seguido de agendar-proximo, e o pacote do ciclo publicado como artifact.",
+    "04_issues_drift": "Issues abertas automaticamente pelo monitoramento de drift (critério 10).",
+    "05_github_status": "Histórico de incidentes do GitHub: nenhum incidente do Actions registrado no dia da execução.",
+    "06_mlflow_runs": "MLflow: um run pai por ciclo (cycle_id), agrupando as etapas registradas pelos notebooks.",
+    "07_mlflow_comparacao_modelos": "MLflow: Modelo A × Modelo B do mesmo ciclo, com as mesmas features, hiperparâmetros e métricas lado a lado.",
+}
+
+
+def secao_prints() -> str:
+    """Prints em evidencias/prints/ entram embutidos, para o PDF ficar autocontido."""
+    arquivos = sorted((RAIZ / "evidencias" / "prints").glob("*.png"))
+    if not arquivos:
+        return ""
+    blocos = ["<h3>Capturas de tela</h3>"]
+    for arquivo in arquivos:
+        imagem = base64.b64encode(arquivo.read_bytes()).decode()
+        legenda = LEGENDAS_PRINTS.get(arquivo.stem, arquivo.stem)
+        blocos.append(
+            f'<figure class="print"><img src="data:image/png;base64,{imagem}">'
+            f"<figcaption>{esc(legenda)} <code>{esc(arquivo.name)}</code></figcaption></figure>"
+        )
+    return "\n".join(blocos)
+
+
 def secao_drift(cfg: dict, ciclos: pd.DataFrame) -> str:
     pasta = caminho(cfg, cfg["saida"]["diretorio_evidencias"])
     linhas = []
@@ -209,6 +236,9 @@ def montar_html(cfg: dict, ciclos: pd.DataFrame) -> str:
   .fluxo div {{ background: #f3eef0; border-radius: 6px; padding: 6px 10px; font-size: 11.5px; }}
   .destaque {{ background: #f7f3f4; border-left: 4px solid #7a1b35; padding: 8px 12px; margin: 12px 0; }}
   img {{ width: 640px; max-width: 100%; display: block; margin: 8px auto 16px; }}
+  figure.print {{ margin: 12px 0 20px; page-break-inside: avoid; }}
+  figure.print img {{ width: 100%; border: 1px solid #ddd; margin: 0 0 4px; }}
+  figcaption {{ font-size: 11px; color: #555; }}
   @media print {{ h2 {{ page-break-after: avoid; }} .tabela {{ page-break-inside: auto; }} }}
 </style></head><body>
 
@@ -300,7 +330,9 @@ permanece no YAML: execuções por <code>schedule</code>, quando ocorrem, aparec
 {tabela_html(execucoes, colunas_html=("execução no GitHub",))}
 <p>Cada ciclo guarda em <code>evidencias/ciclos/&lt;cycle_id&gt;/</code> os notebooks executados, <code>execucao.json</code>
 (gatilho e link da execução), contrato de dados, diagnóstico, votação, comparação, decisão, drift e previsões.
-O MLflow é consultado com <code>python scripts/abrir_mlflow.py</code>.</p>
+O MLflow é consultado com <code>python scripts/abrir_mlflow.py</code>. A linha do tempo do agendamento, com as consultas
+à API do GitHub, está em <code>evidencias/agendamento/</code>.</p>
+{secao_prints()}
 
 <h2>9. Recurso adicional (critério 10): monitoramento de drift com alerta</h2>
 <ul>
