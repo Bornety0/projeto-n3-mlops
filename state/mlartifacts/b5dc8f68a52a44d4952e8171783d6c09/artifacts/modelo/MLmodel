@@ -1,0 +1,39 @@
+artifact_path: modelo
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.11.18
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.5.2
+mlflow_version: 2.17.2
+model_size_bytes: 177106
+model_uuid: 9c724aa53c1a4ec9b32c8950ca86873a
+run_id: b5dc8f68a52a44d4952e8171783d6c09
+signature:
+  inputs: '[{"type": "long", "name": "age", "required": true}, {"type": "double",
+    "name": "campaign_log", "required": true}, {"type": "double", "name": "pdays_dias",
+    "required": false}, {"type": "long", "name": "previous", "required": true}, {"type":
+    "double", "name": "emp.var.rate", "required": true}, {"type": "double", "name":
+    "cons.price.idx", "required": true}, {"type": "double", "name": "cons.conf.idx",
+    "required": true}, {"type": "double", "name": "euribor3m", "required": true},
+    {"type": "double", "name": "nr.employed", "required": true}, {"type": "long",
+    "name": "qtd_desconhecidos", "required": true}, {"type": "string", "name": "job",
+    "required": true}, {"type": "string", "name": "marital", "required": true}, {"type":
+    "string", "name": "education", "required": true}, {"type": "string", "name": "default",
+    "required": true}, {"type": "string", "name": "housing", "required": true}, {"type":
+    "string", "name": "loan", "required": true}, {"type": "string", "name": "contact",
+    "required": true}, {"type": "string", "name": "month", "required": true}, {"type":
+    "string", "name": "day_of_week", "required": true}, {"type": "string", "name":
+    "poutcome", "required": true}, {"type": "string", "name": "contatado_antes", "required":
+    true}, {"type": "string", "name": "faixa_etaria", "required": true}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "int64", "shape": [-1]}}]'
+  params: null
+utc_time_created: '2026-11-23 18:36:46.976049'

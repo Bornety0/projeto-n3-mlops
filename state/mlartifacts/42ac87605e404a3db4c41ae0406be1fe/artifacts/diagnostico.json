@@ -1,0 +1,65 @@
+{
+  "antes": {
+    "linhas": 34289,
+    "colunas": 23,
+    "duplicatas_conteudo": 7,
+    "ausentes": {},
+    "unknown": {
+      "job": 268,
+      "marital": 65,
+      "education": 1366,
+      "default": 7716,
+      "housing": 822,
+      "loan": 822
+    },
+    "outliers_iqr": {
+      "age": 150,
+      "campaign": 2125,
+      "pdays": 497,
+      "previous": 3552,
+      "emp.var.rate": 0,
+      "cons.price.idx": 0,
+      "cons.conf.idx": 0,
+      "euribor3m": 0,
+      "nr.employed": 0,
+      "duration": 2513
+    },
+    "pdays_sem_contato": 33792,
+    "taxa_positiva": 0.0819
+  },
+  "depois": {
+    "limpeza_pool": {
+      "colunas_removidas": [
+        "duration"
+      ],
+      "duplicatas_removidas": 7
+    },
+    "limpeza_teste": {
+      "colunas_removidas": [
+        "duration"
+      ],
+      "duplicatas_removidas": 0
+    },
+    "linhas_pool": 34282,
+    "treino": {
+      "linhas": 27372,
+      "ids": [
+        1,
+        38116
+      ],
+      "taxa_positiva": 0.0828
+    },
+    "validacao": {
+      "linhas": 6910,
+      "ids": [
+        11,
+        38113
+      ],
+      "taxa_positiva": 0.0783
+    },
+    "teste": {
+      "linhas": 4119,
+      "taxa_positiva": 0.1126
+    }
+  }
+}

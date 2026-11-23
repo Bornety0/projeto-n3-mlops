@@ -1,0 +1,25 @@
+{
+  "alerta": true,
+  "features_em_alerta": [
+    "cons.price.idx",
+    "euribor3m",
+    "emp.var.rate",
+    "nr.employed",
+    "cons.conf.idx",
+    "month",
+    "pdays_dias",
+    "contact",
+    "poutcome",
+    "default",
+    "job",
+    "contatado_antes",
+    "faixa_etaria"
+  ],
+  "n_features_em_alerta": 13,
+  "psi_maximo": 8.698,
+  "limiar_psi": 0.2,
+  "min_features_alerta": 3,
+  "avaliado": true,
+  "taxa_positiva_referencia": 0.0648,
+  "taxa_positiva_novo": 0.2758
+}

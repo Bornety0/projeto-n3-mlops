@@ -1,0 +1,14 @@
+{
+  "features": [
+    "euribor3m",
+    "emp.var.rate",
+    "cons.price.idx",
+    "contatado_antes",
+    "contact",
+    "nr.employed",
+    "month",
+    "poutcome",
+    "cons.conf.idx",
+    "job"
+  ]
+}
