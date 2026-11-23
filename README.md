@@ -143,6 +143,16 @@ python scripts/preparar_dados.py
 python -m pytest -q
 ```
 
+### Relatório técnico
+
+Gerado a partir das evidências reais dos ciclos (tabelas de votos, comparação, decisões, drift e links das execuções):
+
+```bash
+python scripts/gerar_relatorio.py --somente-agendados --pdf
+```
+
+Saída em `reports/relatorio_n3.html` e `reports/relatorio_n3.pdf` (o PDF usa o Chrome/Chromium em modo headless).
+
 ## Mapa dos critérios de avaliação
 
 | # | Critério | Onde verificar |

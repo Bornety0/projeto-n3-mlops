@@ -1,6 +1,14 @@
 # Roteiro do relatório técnico (exportar como `reports/relatorio_n3.pdf`)
 
-Estrutura exigida pela seção 7 do enunciado. Preencher com os resultados dos ciclos **agendados** (não dos testes locais).
+Estrutura exigida pela seção 7 do enunciado. O relatório é gerado a partir das evidências reais dos ciclos:
+
+```bash
+git pull
+python scripts/gerar_relatorio.py --somente-agendados --pdf
+```
+
+O script preenche as seções 1-10 abaixo com tabelas e gráficos. Antes de entregar, o grupo revisa o texto, acrescenta
+prints do MLflow e do Actions na seção de evidências e escreve as próprias conclusões.
 
 1. **Identificação** — integrantes (Matheus Sady, Rafael Venturi, Rafael de Lara), disciplina, link do repositório.
 2. **Problema e dados** — fonte/licença, unidade de observação, alvo, atributos, limitações (prevalência variável, período
