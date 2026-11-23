@@ -4,9 +4,10 @@ name: pipeline-mlops
 
 on:
   schedule:
-    # 2 ciclos por dia (09:17 e 21:17 UTC). Minuto "quebrado" porque o GitHub atrasa
-    # mais os agendamentos na virada da hora.
-    - cron: "17 9,21 * * *"
+    # 1 ciclo por hora das 13:17 às 19:17 UTC (10:17-16:17 em Brasília): 5 lotes + ciclos
+    # sem dados novos no mesmo dia. Minuto "quebrado" porque o GitHub atrasa mais os
+    # agendamentos na virada da hora.
+    - cron: "17 13-19 * * *"
   workflow_dispatch:
 
 permissions:

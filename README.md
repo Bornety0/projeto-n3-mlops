@@ -124,8 +124,8 @@ modelo.predict_proba(teste)[:, 1]
 
 ### Execução agendada (GitHub Actions)
 
-`.github/workflows/pipeline_mlops.yml` é o **único** workflow: `schedule` (09:17 e 21:17 UTC) e `workflow_dispatch` para
-depuração. Requisitos no repositório: *Settings → Actions → General → Workflow permissions → Read and write*. O
+`.github/workflows/pipeline_mlops.yml` é o **único** workflow: `schedule` (de hora em hora, 13:17-19:17 UTC) e
+`workflow_dispatch` para depuração. Requisitos no repositório: *Settings → Actions → General → Workflow permissions → Read and write*. O
 agendamento só roda na branch padrão. O gatilho de cada ciclo fica registrado em
 `evidencias/ciclos/<cycle_id>/execucao.json` (`"gatilho": "schedule"`).
 
